@@ -36,6 +36,7 @@
 #include "usart.h"
 #include "gpio.h"
 
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -80,6 +81,10 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+
+  /* Initialise Flash */
+  FLASH_If_Init();
+  Main_Menu();
 
   /* USER CODE END 2 */
 
