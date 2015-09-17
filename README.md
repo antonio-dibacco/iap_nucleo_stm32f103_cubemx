@@ -1,5 +1,5 @@
 # iap_nucleo_stm32f103_cubemx
-In Application Programming for nucleo stm32f103rb using Cube MX. 
+In Application Programming for nucleo stm32f103rb using Cube MX and UART. 
 Like the ST IAP it presents a menu where you can load a new firmware at APPLICATION_ADDRESS (0x08008000) 
 in flash. 
 This project is for AC6 studio and the initial processor configuration is done using Cube MX.
