@@ -56,10 +56,11 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-pFunction JumpToApplication;
-uint32_t JumpAddress;
+
 uint32_t FlashProtection = 0;
 uint8_t aFileName[FILE_NAME_LENGTH];
+extern pFunction JumpToApplication;
+extern uint32_t JumpAddress;
 
 /* Private function prototypes -----------------------------------------------*/
 void SerialDownload(void);
@@ -190,17 +191,20 @@ void Main_Menu(void)
       break;
     case '2' :
       /* Upload user application from the Flash */
+      /* not needed */
       SerialUpload();
       break;
     case '3' :
-      Serial_PutString("Start program execution......\r\n\n");
-      /* execute the new program */
-      JumpAddress = *(volatile uint32_t*) (APPLICATION_ADDRESS + 4);
-      /* Jump to user application */
-      JumpToApplication = (pFunction) JumpAddress;
-      /* Initialize user application's Stack Pointer */
-      __set_MSP(*(volatile uint32_t*) APPLICATION_ADDRESS);
-      JumpToApplication();
+      Serial_PutString("Starting ......\r\n\n");
+		/* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
+		if (((*(__IO uint32_t*) APPLICATION_ADDRESS ) & 0x2FFE0000) == 0x20000000) {
+			/* Jump to user application */
+			JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
+			JumpToApplication = (pFunction) JumpAddress;
+			/* Initialize user application's Stack Pointer */
+			__set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
+			JumpToApplication();
+		}
       break;
     case '4' :
       if (FlashProtection != FLASHIF_PROTECTION_NONE)

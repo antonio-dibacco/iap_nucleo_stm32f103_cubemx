@@ -231,7 +231,7 @@ uint32_t FLASH_If_WriteProtectionConfig(uint32_t protectionstate)
     result = HAL_FLASHEx_OBProgram(&config_new);
   }
   
-  return (result == HAL_OK ? FLASHIF_OK: FLASHIF_PROTECTION_ERRROR);
+  return (result == HAL_OK ? FLASHIF_OK: FLASHIF_PROTECTION_ERROR);
 }
 /**
   * @}
