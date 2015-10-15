@@ -44,7 +44,7 @@
 uint8_t aPacketData[PACKET_1K_SIZE + PACKET_DATA_INDEX + PACKET_TRAILER_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/
-static void PrepareIntialPacket(uint8_t *p_data, const uint8_t *p_file_name, uint32_t length);
+static void PrepareInitialPacket(uint8_t *p_data, const uint8_t *p_file_name, uint32_t length);
 static void PreparePacket(uint8_t *p_source, uint8_t *p_packet, uint8_t pkt_nr, uint32_t size_blk);
 static HAL_StatusTypeDef ReceivePacket(uint8_t *p_data, uint32_t *p_length, uint32_t timeout);
 uint16_t UpdateCRC16(uint16_t crc_in, uint8_t byte);
@@ -147,7 +147,7 @@ static HAL_StatusTypeDef ReceivePacket(uint8_t *p_data, uint32_t *p_length, uint
   * @param  length: length of the file to be sent in bytes
   * @retval None
   */
-static void PrepareIntialPacket(uint8_t *p_data, const uint8_t *p_file_name, uint32_t length)
+static void PrepareInitialPacket(uint8_t *p_data, const uint8_t *p_file_name, uint32_t length)
 {
   uint32_t i, j = 0;
   uint8_t astring[10];
@@ -457,7 +457,7 @@ COM_StatusTypeDef Ymodem_Transmit (uint8_t *p_buf, const uint8_t *p_file_name, u
 #endif /* CRC16_F */  
 
   /* Prepare first block - header */
-  PrepareIntialPacket(aPacketData, p_file_name, file_size);
+  PrepareInitialPacket(aPacketData, p_file_name, file_size);
 
   while (( !ack_recpt ) && ( result == COM_OK ))
   {

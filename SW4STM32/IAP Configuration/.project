@@ -31,6 +31,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/startup_stm32f103xb.s</locationURI>
 		</link>
 		<link>
+			<name>Application/User/can.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Src/can.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/canapi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Src/canapi.c</locationURI>
+		</link>
+		<link>
 			<name>Application/User/common.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/common.c</locationURI>
@@ -46,6 +56,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Src/flash_if.c</locationURI>
 		</link>
 		<link>
+			<name>Application/User/fwloader.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Src/fwloader.c</locationURI>
+		</link>
+		<link>
 			<name>Application/User/gpio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/gpio.c</locationURI>
@@ -54,11 +69,6 @@
 			<name>Application/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>
-		</link>
-		<link>
-			<name>Application/User/menu.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Src/menu.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/stm32f1xx_hal_msp.c</name>
@@ -89,6 +99,11 @@
 			<name>Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal_can.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_can.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal_cortex.c</name>
