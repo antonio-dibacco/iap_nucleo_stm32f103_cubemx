@@ -64,9 +64,19 @@ typedef enum
 	END_OF_PACKET		 ,
 	END_OF_PACKET_OK  	 ,
 	CONTROL				 ,
+	RESET_REQUEST  		 ,
 	BAD_PACKET 		  = 255
 } Frame_TypeDef;
 
+
+typedef enum
+{
+	NO_CMD				= 0,
+	DOWNLOAD_CMD		= 1,
+	RESET_CMD			= 2,
+	START_CMD			= 3,
+	VERSION_CMD			= 4
+} Command_TypeDef;
 
 HAL_StatusTypeDef CAN_Listen_For_Transfer(Transfer_Session* pSession, uint32_t timeout);
 Frame_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout);

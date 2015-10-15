@@ -188,6 +188,7 @@ void Load_Firmware_CAN(void)
 	CAN_FilterInitStructure.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 	CAN_FilterInitStructure.FilterActivation = ENABLE;
 	HAL_StatusTypeDef res = HAL_CAN_ConfigFilter(&hcan, &CAN_FilterInitStructure);
+	Command_TypeDef result = START_CMD;
 
 	HAL_CAN_WakeUp(&hcan);
 
@@ -197,16 +198,16 @@ void Load_Firmware_CAN(void)
 
 	Transfer_Session session;
 
-	status = CAN_Listen_For_Transfer(&session, 5000);
+	result = CAN_Listen_For_Command(&session, 5000);
 
 
-	if (status == HAL_OK) {
+	if (result == DOWNLOAD_CMD) {
 
 		flash_destination = APPLICATION_ADDRESS;
 
 		while (pt == DATA) {
 			int packet_length = 0;
-			pt = CAN_Receive_Packet(aPacketData, &packet_length, 2000);
+			pt = CAN_Receive_Packet(aPacketData, &packet_length, 3000);
 
 			if (pt == DATA) {
 				ram_source = (uint32_t) &aPacketData[0];
@@ -231,7 +232,13 @@ void Load_Firmware_CAN(void)
 		Start_Application();
 
 	}
-	else {
+	else if (result == RESET_CMD)
+	{
+		// Didn't receive any message, just startup
+		NVIC_SystemReset();
+	}
+	else
+	{
 		// Didn't receive any message, just startup
 		Start_Application();
 	}

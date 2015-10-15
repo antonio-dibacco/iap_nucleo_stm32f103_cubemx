@@ -35,11 +35,13 @@ uint8_t CalcChecksum(const uint8_t *p_data, uint32_t size);
  * @retval HAL_OK: normally return
  *         HAL_BUSY: abort by user
  */
-HAL_StatusTypeDef CAN_Listen_For_Transfer(Transfer_Session* pSession, uint32_t timeout)
+Command_TypeDef CAN_Listen_For_Command(Transfer_Session* pSession, uint32_t timeout)
 {
 	uint32_t crc;
 	uint32_t received = 0;
-	HAL_StatusTypeDef status = HAL_TIMEOUT;
+	Command_TypeDef status = HAL_TIMEOUT;
+	Command_TypeDef result = NO_CMD;
+
 	uint8_t char1;
 	int i = 0;
 
@@ -56,7 +58,7 @@ HAL_StatusTypeDef CAN_Listen_For_Transfer(Transfer_Session* pSession, uint32_t t
 		hcan.pTxMsg->Data[1] = i;
 
 		HAL_CAN_Transmit(&hcan, 500);
-		status = HAL_CAN_Receive(&hcan, CAN_FIFO0, 2000);
+		status = HAL_CAN_Receive(&hcan, CAN_FIFO0, 3000);
 
 	}
 
@@ -68,13 +70,22 @@ HAL_StatusTypeDef CAN_Listen_For_Transfer(Transfer_Session* pSession, uint32_t t
 
 			hcan.pTxMsg->DLC = 1;
 			hcan.pTxMsg->Data[0] = START_DOWNLOAD_OK;
-			status = HAL_CAN_Transmit(&hcan, 200);
-		} else {
-			status = HAL_ERROR;
+			status = HAL_CAN_Transmit(&hcan, 300);
+			return DOWNLOAD_CMD;
+		}
+		else if (hcan.pRxMsg->Data[0] == RESET_REQUEST)
+		{
+			return RESET_CMD;
+		}
+		else
+		{
+			return START_CMD;
 		}
 	}
-
-	return status;
+	else
+	{
+		return NO_CMD;
+	}
 }
 
 /**
@@ -100,18 +111,12 @@ Frame_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeou
 	hcan.pRxMsg = &receiveMsg;
 
 	// Wait for either a start of data packet or control packet
-	status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
+	status = HAL_CAN_Receive(&hcan, CAN_FIFO0, 2*timeout);
 
 	if (status == HAL_OK)
 	{
 		switch (hcan.pRxMsg->Data[0])
 		{
-			case CONTROL:
-			{
-				result = CONTROL;
-				memcpy(p_data, hcan.pRxMsg->Data, hcan.pRxMsg->DLC);
-			}
-				break;
 			case START_OF_PACKET:
 			{
 				packet_length = *((uint32_t*) &hcan.pRxMsg->Data[1]);

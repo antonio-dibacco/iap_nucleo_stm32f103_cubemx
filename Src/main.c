@@ -96,7 +96,12 @@ int main(void) {
 	while (1) {
 
   /* USER CODE END WHILE */
-
+		int i = 0;
+		for (i = 0; i < 30; i++)
+		{
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+			HAL_Delay(50);
+		}
 #ifdef CAN_IAP
 		Load_Firmware_CAN();
 #else
