@@ -39,7 +39,7 @@ Command_TypeDef CAN_Listen_For_Command(Transfer_Session* pSession, uint32_t time
 {
 	uint32_t crc;
 	uint32_t received = 0;
-	Command_TypeDef status = HAL_TIMEOUT;
+	HAL_StatusTypeDef status = HAL_TIMEOUT;
 	Command_TypeDef result = NO_CMD;
 
 	uint8_t char1;
@@ -53,7 +53,7 @@ Command_TypeDef CAN_Listen_For_Command(Transfer_Session* pSession, uint32_t time
 	hcan.pTxMsg->Data[0] = READY_TO_START;
 
 
-	for (i = 0; (i < 100) && (status != HAL_OK); i++)
+	for (i = 0; (i < 3) && (status != HAL_OK); i++)
 	{
 		hcan.pTxMsg->Data[1] = i;
 
