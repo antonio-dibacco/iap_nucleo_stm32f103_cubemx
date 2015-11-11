@@ -204,7 +204,7 @@ void Load_Firmware_CAN(void)
 	{
 		if (aPacketData[0] == DOWNLOAD_CMD)
 		{
-
+			uint32_t file_length = *((uint32_t*) &aPacketData[1]);
 			flash_destination = APPLICATION_ADDRESS;
 
 			do {
@@ -219,6 +219,8 @@ void Load_Firmware_CAN(void)
 					if (FLASH_If_Write(flash_destination, (uint32_t*) ram_source, packet_length/4) == FLASHIF_OK)
 					{
 						flash_destination += packet_length;
+						file_length -= packet_length;
+
 					}
 					else /* An error occurred while writing to Flash memory */
 					{
@@ -227,7 +229,7 @@ void Load_Firmware_CAN(void)
 					}
 				}
 
-			} while (aPacketData[0] == DATA);
+			} while (file_length > 0 );
 
 			Start_Application();
 
