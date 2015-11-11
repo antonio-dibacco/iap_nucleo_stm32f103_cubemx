@@ -206,6 +206,7 @@ void Load_Firmware_CAN(void)
 		{
 			uint32_t file_length = *((uint32_t*) &aPacketData[1]);
 			flash_destination = APPLICATION_ADDRESS;
+			FLASH_If_Erase(APPLICATION_ADDRESS);
 
 			do {
 				int packet_length = 0;

@@ -69,7 +69,7 @@ PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t
 					*len = packet_length;
 					hcan.pTxMsg->DLC = 1;
 					hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
-
+					HAL_Delay(100);
 					status = HAL_CAN_Transmit(&hcan, timeout);
 					result = PACKET_OK;
 
