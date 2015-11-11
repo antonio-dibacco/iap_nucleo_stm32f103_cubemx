@@ -46,7 +46,6 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "common.h"
 #include "flash_if.h"
 #include "menu.h"
 #include "ymodem.h"
@@ -174,6 +173,7 @@ void SerialUpload(void)
  */
 void Load_Firmware_CAN(void)
 {
+	int len = 0;
 	uint32_t flash_destination, ram_source;
 
 	CAN_FilterConfTypeDef CAN_FilterInitStructure;
@@ -188,60 +188,63 @@ void Load_Firmware_CAN(void)
 	CAN_FilterInitStructure.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 	CAN_FilterInitStructure.FilterActivation = ENABLE;
 	HAL_StatusTypeDef res = HAL_CAN_ConfigFilter(&hcan, &CAN_FilterInitStructure);
-	Command_TypeDef result = START_CMD;
 
 	HAL_CAN_WakeUp(&hcan);
 
 
-	HAL_StatusTypeDef status = HAL_TIMEOUT;
-	Frame_TypeDef pt = DATA;
+	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 20000);
 
-	Transfer_Session session;
+	if (result == PACKET_BAD)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
-	result = CAN_Listen_For_Command(&session, 5000);
+	}
 
+	if (result == PACKET_OK)
+	{
+		if (aPacketData[0] == DOWNLOAD_CMD)
+		{
 
-	if (result == DOWNLOAD_CMD) {
+			flash_destination = APPLICATION_ADDRESS;
 
-		flash_destination = APPLICATION_ADDRESS;
+			do {
+				int packet_length = 0;
 
-		while (pt == DATA) {
-			int packet_length = 0;
-			pt = CAN_Receive_Packet(aPacketData, &packet_length, 3000);
+				result = CAN_Receive_Packet(aPacketData, &packet_length, 3000);
 
-			if (pt == DATA) {
-				ram_source = (uint32_t) &aPacketData[0];
+				if ((result == PACKET_OK)) {
+					ram_source = (uint32_t) &aPacketData[0];
 
-				/* Write received data in Flash */
-				if (FLASH_If_Write(flash_destination, (uint32_t*) ram_source, packet_length/4) == FLASHIF_OK)
-				{
-					flash_destination += packet_length;
+					/* Write received data in Flash */
+					if (FLASH_If_Write(flash_destination, (uint32_t*) ram_source, packet_length/4) == FLASHIF_OK)
+					{
+						flash_destination += packet_length;
+					}
+					else /* An error occurred while writing to Flash memory */
+					{
+						// Reset
+						NVIC_SystemReset();
+					}
 				}
-				else /* An error occurred while writing to Flash memory */
-				{
-					// Reset
-					NVIC_SystemReset();
-				}
-			}
-			else {
-				// Transfer finished
 
-			}
+			} while (aPacketData[0] == DATA);
+
+			Start_Application();
+
 		}
+		else if (aPacketData[0]  == RESET_CMD)
+		{
+			// Didn't receive any message, just startup
+			NVIC_SystemReset();
+		}
+		else
+		{
+			// Didn't receive any message, just startup
+			Start_Application();
+		}
+	}
 
-		Start_Application();
 
-	}
-	else if (result == RESET_CMD)
-	{
-		// Didn't receive any message, just startup
-		NVIC_SystemReset();
-	}
-	else
-	{
-		// Didn't receive any message, just startup
-		Start_Application();
-	}
 }
 
 /**

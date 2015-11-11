@@ -1,9 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
-#include "flash_if.h"
-#include "common.h"
-#include "ymodem.h"
+#include "stm32f1xx_hal.h"
+
 #include "string.h"
-#include "menu.h"
 #include "can.h"
 #include "canapi.h"
 
@@ -13,7 +11,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* @note ATTENTION - please keep this variable 32bit alligned */
-static uint8_t aPacketData[PACKET_1K_SIZE + PACKET_DATA_INDEX + PACKET_TRAILER_SIZE];
 static CanTxMsgTypeDef transmitMsg;
 static CanRxMsgTypeDef receiveMsg;
 
@@ -24,69 +21,6 @@ uint8_t CalcChecksum(const uint8_t *p_data, uint32_t size);
 
 /* Private functions ---------------------------------------------------------*/
 
-/**
- * @brief  Receive a packet from sender
- * @param  data
- * @param  length
- *     0: end of transmission
- *     2: abort by sender
- *    >0: packet length
- * @param  timeout
- * @retval HAL_OK: normally return
- *         HAL_BUSY: abort by user
- */
-Command_TypeDef CAN_Listen_For_Command(Transfer_Session* pSession, uint32_t timeout)
-{
-	uint32_t crc;
-	uint32_t received = 0;
-	HAL_StatusTypeDef status = HAL_TIMEOUT;
-	Command_TypeDef result = NO_CMD;
-
-	uint8_t char1;
-	int i = 0;
-
-	hcan.pTxMsg = &transmitMsg;
-	hcan.pRxMsg = &receiveMsg;
-
-	// HELLO
-	hcan.pTxMsg->DLC = 2;
-	hcan.pTxMsg->Data[0] = READY_TO_START;
-
-
-	for (i = 0; (i < 3) && (status != HAL_OK); i++)
-	{
-		hcan.pTxMsg->Data[1] = i;
-
-		HAL_CAN_Transmit(&hcan, 500);
-		status = HAL_CAN_Receive(&hcan, CAN_FIFO0, 3000);
-
-	}
-
-
-	if (status == HAL_OK) {
-		if (hcan.pRxMsg->Data[0] == START_DOWNLOAD)
-		{
-			FLASH_If_Erase(APPLICATION_ADDRESS);
-
-			hcan.pTxMsg->DLC = 1;
-			hcan.pTxMsg->Data[0] = START_DOWNLOAD_OK;
-			status = HAL_CAN_Transmit(&hcan, 300);
-			return DOWNLOAD_CMD;
-		}
-		else if (hcan.pRxMsg->Data[0] == RESET_REQUEST)
-		{
-			return RESET_CMD;
-		}
-		else
-		{
-			return START_CMD;
-		}
-	}
-	else
-	{
-		return NO_CMD;
-	}
-}
 
 /**
  * @brief  Receive a packet from sender
@@ -99,29 +33,27 @@ Command_TypeDef CAN_Listen_For_Command(Transfer_Session* pSession, uint32_t time
  * @retval HAL_OK: normally return
  *         HAL_BUSY: abort by user
  */
-Frame_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout) {
+PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout) {
 	uint32_t crc;
 	uint32_t received = 0;
 	uint32_t packet_length = 0;
 	HAL_StatusTypeDef status = HAL_TIMEOUT;
-	Frame_TypeDef result = BAD_PACKET;
+	PacketStatus_TypeDef result = RX_TIMEOUT;
 	uint8_t char1;
 
 	hcan.pTxMsg = &transmitMsg;
 	hcan.pRxMsg = &receiveMsg;
 
-	// Wait for either a start of data packet or control packet
-	status = HAL_CAN_Receive(&hcan, CAN_FIFO0, 2*timeout);
+	do {
+		status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
+	}
+	while ((status == HAL_OK) && (hcan.pRxMsg->DLC != 5));
 
-	if (status == HAL_OK)
+	if ((status == HAL_OK) && (hcan.pRxMsg->DLC == 5) && (hcan.pRxMsg->Data[0] == START_OF_PACKET))
 	{
-		switch (hcan.pRxMsg->Data[0])
-		{
-			case START_OF_PACKET:
-			{
+
 				packet_length = *((uint32_t*) &hcan.pRxMsg->Data[1]);
 
-				status = HAL_OK;
 				while ((received < packet_length) && (status == HAL_OK))
 				{
 					status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
@@ -134,56 +66,79 @@ Frame_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeou
 
 				if (received == packet_length)
 				{
-					status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
-					if (status == HAL_OK)
-					{
-						if (hcan.pRxMsg->Data[0] == END_OF_PACKET)
-						{
-							result = DATA;
-							*len = packet_length;
-							hcan.pTxMsg->DLC = 1;
-							hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
+					*len = packet_length;
+					hcan.pTxMsg->DLC = 1;
+					hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
 
-							status = HAL_CAN_Transmit(&hcan, 500);
+					status = HAL_CAN_Transmit(&hcan, timeout);
+					result = PACKET_OK;
 
-						}
-						else
-							result = BAD_PACKET;
-					}
-					else
-					{
-						result = BAD_PACKET;
-					}
 				}
 				else
 				{
-					result = BAD_PACKET;
+					result = PACKET_BAD;
 				}
-			}
-				break;
-			default:
-				result = BAD_PACKET;
-				break;
 
-		}
+
 	}
 	else
 	{
-		result = BAD_PACKET;
-	}
-
-	if (result == BAD_PACKET)
-	{
-		hcan.pTxMsg->DLC = 1;
-		hcan.pTxMsg->Data[0] = BAD_PACKET;
-
-		status = HAL_CAN_Transmit(&hcan, 500);
+		result = RX_TIMEOUT;
 	}
 
 
 	return result;
 }
 
+HAL_StatusTypeDef CAN_Transmit_Packet(uint8_t *pdata, uint32_t len, uint32_t timeout) {
+
+	    int sent_bytes = 0;
+	    int nbytes = 0;
+	    HAL_StatusTypeDef status = HAL_ERROR;
+	    HAL_CAN_StateTypeDef state;
+
+	    hcan.pTxMsg->Data[0] = START_OF_PACKET;
+		hcan.pTxMsg->DLC = 5;
+	    *((uint32_t*) &hcan.pTxMsg->Data[1]) = len;
+
+	    status = HAL_CAN_Transmit(&hcan, timeout);
+
+	    while ((sent_bytes < len) && (status == HAL_OK))
+	    {
+	        nbytes = ((len - sent_bytes) > 8)? 8 : (len - sent_bytes);
+	        memcpy(hcan.pTxMsg->Data, pdata, nbytes);
+	        pdata += nbytes;
+	        sent_bytes += nbytes;
+	        hcan.pTxMsg->DLC = nbytes;
+
+//	        while ((state = HAL_CAN_GetState(&hcan)) != HAL_CAN_STATE_READY)
+//	        	vTaskDelay(50/ portTICK_PERIOD_MS);
+
+//	        vTaskDelay(800/ portTICK_PERIOD_MS);
+	        status = HAL_CAN_Transmit(&hcan, timeout);
+	    }
+
+	    if (status == HAL_OK)
+	    {
+	    	status = HAL_CAN_Receive(&hcan, CAN_FIFO0, timeout);
+
+
+	    	if ((status == HAL_OK) && (hcan.pRxMsg->DLC == 1) && (hcan.pRxMsg->Data[0] == END_OF_PACKET_OK))
+	    	{
+
+	    	}
+	    	else {
+	    		state = HAL_CAN_GetState(&hcan);
+	    	}
+
+	    }
+	    else
+	    {
+	    	state = HAL_CAN_GetState(&hcan);
+        	//vTaskDelay(50/ portTICK_PERIOD_MS);
+	    }
+	    return status;
+}
 
 
 

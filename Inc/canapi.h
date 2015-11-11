@@ -71,6 +71,13 @@ typedef enum
 
 typedef enum
 {
+	PACKET_OK	      = 1,
+	PACKET_BAD           ,
+	RX_TIMEOUT
+} PacketStatus_TypeDef;
+
+typedef enum
+{
 	NO_CMD				= 0,
 	DOWNLOAD_CMD		= 1,
 	RESET_CMD			= 2,
@@ -78,9 +85,8 @@ typedef enum
 	VERSION_CMD			= 4
 } Command_TypeDef;
 
-HAL_StatusTypeDef CAN_Listen_For_Transfer(Transfer_Session* pSession, uint32_t timeout);
-Frame_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout);
-
+PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout);
+HAL_StatusTypeDef CAN_Transmit_Packet(uint8_t *pdata, uint32_t len, uint32_t timeout);
 
 #endif  /* __FIRMWARE_DOWNLOAD_H_ */
 
