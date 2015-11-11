@@ -192,12 +192,11 @@ void Load_Firmware_CAN(void)
 	HAL_CAN_WakeUp(&hcan);
 
 
-	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 20000);
+	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 4000);
 
 	if (result == PACKET_BAD)
 	{
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
 	}
 
 	if (result == PACKET_OK)
@@ -245,6 +244,9 @@ void Load_Firmware_CAN(void)
 			// Didn't receive any message, just startup
 			Start_Application();
 		}
+	}
+	if(result == RX_TIMEOUT){
+		Start_Application();
 	}
 
 
