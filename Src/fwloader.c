@@ -191,6 +191,7 @@ void Load_Firmware_CAN(void)
 
 	HAL_CAN_WakeUp(&hcan);
 
+//	CAN_Transmit_Packet(aPacketData,8,1000);
 
 	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 4000);
 
