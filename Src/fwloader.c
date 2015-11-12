@@ -193,7 +193,7 @@ void Load_Firmware_CAN(void)
 
 //	CAN_Transmit_Packet(aPacketData,8,1000);
 
-	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 4000);
+	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 4000, 1);
 
 	if (result == PACKET_BAD)
 	{
@@ -207,11 +207,12 @@ void Load_Firmware_CAN(void)
 			uint32_t file_length = *((uint32_t*) &aPacketData[1]);
 			flash_destination = APPLICATION_ADDRESS;
 			FLASH_If_Erase(APPLICATION_ADDRESS);
+			CAN_Ack_Packet();
 
 			do {
 				int packet_length = 0;
 
-				result = CAN_Receive_Packet(aPacketData, &packet_length, 3000);
+				result = CAN_Receive_Packet(aPacketData, &packet_length, 3000, 1);
 
 				if ((result == PACKET_OK)) {
 					ram_source = (uint32_t) &aPacketData[0];
@@ -228,6 +229,7 @@ void Load_Firmware_CAN(void)
 						// Reset
 						NVIC_SystemReset();
 					}
+					CAN_Ack_Packet();
 				}
 
 			} while (file_length > 0 );

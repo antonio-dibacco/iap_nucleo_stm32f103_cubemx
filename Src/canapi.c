@@ -33,7 +33,7 @@ uint8_t CalcChecksum(const uint8_t *p_data, uint32_t size);
  * @retval HAL_OK: normally return
  *         HAL_BUSY: abort by user
  */
-PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout) {
+PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout, int skipAck = 0) {
 	uint32_t crc;
 	uint32_t received = 0;
 	uint32_t packet_length = 0;
@@ -67,10 +67,13 @@ PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t
 				if (received == packet_length)
 				{
 					*len = packet_length;
-					hcan.pTxMsg->DLC = 1;
-					hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
-					HAL_Delay(100);
-					status = HAL_CAN_Transmit(&hcan, timeout);
+					if (!skipAck)
+					{
+						hcan.pTxMsg->DLC = 1;
+						hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
+						HAL_Delay(100);
+						status = HAL_CAN_Transmit(&hcan, timeout);
+					}
 					result = PACKET_OK;
 
 				}
@@ -88,6 +91,14 @@ PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t
 
 
 	return result;
+}
+
+
+HAL_StatusTypeDef CAN_Ack_Packet() {
+	hcan.pTxMsg->DLC = 1;
+	hcan.pTxMsg->Data[0] = END_OF_PACKET_OK;
+	HAL_Delay(100);
+	int status = HAL_CAN_Transmit(&hcan, 1000);
 }
 
 HAL_StatusTypeDef CAN_Transmit_Packet(uint8_t *pdata, uint32_t len, uint32_t timeout) {
