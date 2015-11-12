@@ -85,7 +85,7 @@ typedef enum
 	VERSION_CMD			= 4
 } Command_TypeDef;
 
-PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout, int skipAck = 0);
+PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout, int skipAck);
 HAL_StatusTypeDef CAN_Transmit_Packet(uint8_t *pdata, uint32_t len, uint32_t timeout);
 
 #endif  /* __FIRMWARE_DOWNLOAD_H_ */

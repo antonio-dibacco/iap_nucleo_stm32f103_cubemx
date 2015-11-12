@@ -33,7 +33,7 @@ uint8_t CalcChecksum(const uint8_t *p_data, uint32_t size);
  * @retval HAL_OK: normally return
  *         HAL_BUSY: abort by user
  */
-PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout, int skipAck = 0) {
+PacketStatus_TypeDef CAN_Receive_Packet(uint8_t *p_data, uint32_t* len, uint32_t timeout, int skipAck) {
 	uint32_t crc;
 	uint32_t received = 0;
 	uint32_t packet_length = 0;
