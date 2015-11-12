@@ -193,7 +193,7 @@ void Load_Firmware_CAN(void)
 
 //	CAN_Transmit_Packet(aPacketData,8,1000);
 
-	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 4000, 1);
+	PacketStatus_TypeDef result = CAN_Receive_Packet(aPacketData, &len, 5000, 1);
 
 	if (result == PACKET_BAD)
 	{
@@ -222,6 +222,7 @@ void Load_Firmware_CAN(void)
 					{
 						flash_destination += packet_length;
 						file_length -= packet_length;
+						HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
 					}
 					else /* An error occurred while writing to Flash memory */

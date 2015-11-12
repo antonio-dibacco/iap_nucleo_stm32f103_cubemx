@@ -97,10 +97,10 @@ int main(void) {
 
   /* USER CODE END WHILE */
 		int i = 0;
-		for (i = 0; i < 30; i++)
+		for (i = 0; i < 20; i++)
 		{
 			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-			HAL_Delay(50);
+			HAL_Delay(40);
 		}
 #ifdef CAN_IAP
 		Load_Firmware_CAN();
